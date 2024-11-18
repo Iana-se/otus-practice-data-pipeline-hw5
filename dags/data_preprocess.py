@@ -1,7 +1,7 @@
 """
 Script: data_preprocess.py
 DAG: data_preprocess
-Description: Simple DAG for Data Preprocessing
+Description: Simple DAG for Data Preprocessing with PySpark on Yandex.Cloud
 """
 
 import uuid
@@ -96,7 +96,6 @@ setup_airflow_connections(YC_S3_CONNECTION, YC_SA_CONNECTION)
 # Настройки DAG
 with DAG(
     dag_id="data_preprocess",
-    # schedule_interval='@hourly',
     start_date=datetime(year=2024, month=1, day=20),
     schedule_interval=timedelta(minutes=30),
     catchup=False,

@@ -43,12 +43,10 @@ def sum_csv_files(source_path: str, output_path: str) -> None:
         ["result"]
     )
 
-    # Запись результата в формате parquet
     result_df.write.mode("overwrite").parquet(output_path)
 
 def main():
     """Main function to execute the PySpark job"""
-
     parser = ArgumentParser()
     parser.add_argument("--bucket", required=True, help="S3 bucket name")
     args = parser.parse_args()
