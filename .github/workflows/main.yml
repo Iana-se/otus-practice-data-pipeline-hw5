@@ -34,7 +34,7 @@ jobs:
       - name: Sync DAGs to server
         uses: burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avz --include="*.py" --exclude="*"
+          switches: -avz --no-times --include="*.py" --exclude="*"
           path: dags/
           remote_path: ${{ env.DEPLOY_DAGS_FOLDER }}
           remote_host: ${{ env.DEPLOY_HOST }}
