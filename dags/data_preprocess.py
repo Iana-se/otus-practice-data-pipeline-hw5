@@ -98,7 +98,7 @@ with DAG(
     dag_id="data_preprocess",
     # schedule_interval='@hourly',
     start_date=datetime(year=2024, month=1, day=20),
-    schedule_interval=timedelta(minutes=16),
+    schedule_interval=timedelta(minutes=30),
     catchup=False,
 ) as ingest_dag:
     # 1 этап: создание Dataproc клаcтера

@@ -21,7 +21,6 @@ def sum_csv_files(source_path: str, output_path: str) -> None:
         Path to the output bucket to save the result
     """
 
-    # Инициализация Spark сессии
     spark = (SparkSession
         .builder
         .appName("sum-csv-files")
@@ -29,7 +28,6 @@ def sum_csv_files(source_path: str, output_path: str) -> None:
         .getOrCreate()
     )
 
-    # Чтение всех CSV файлов из бакета
     df = (spark
         .read
         .option('comment', '#')
@@ -37,9 +35,9 @@ def sum_csv_files(source_path: str, output_path: str) -> None:
         .format('csv')
         .load(source_path)
     )
-    # Вычисление суммы
+
     sum_value = df.agg(spark_sum('field').alias('sum')).collect()[0]['sum']
-    # Создание DataFrame с результатом в одной строке
+
     result_df = spark.createDataFrame(
         [(sum_value,)],
         ["result"]
@@ -51,7 +49,6 @@ def sum_csv_files(source_path: str, output_path: str) -> None:
 def main():
     """Main function to execute the PySpark job"""
 
-    # Получение имени бакета из аргументов командной строки
     parser = ArgumentParser()
     parser.add_argument("--bucket", required=True, help="S3 bucket name")
     args = parser.parse_args()
@@ -60,9 +57,8 @@ def main():
     if not bucket_name:
         raise ValueError("Environment variable S3_BUCKET_NAME is not set")
 
-    # Формирование путей для входных и выходных данных
-    input_path = f"{bucket_name}/input_data/*.csv"
-    output_path = f"{bucket_name}/output_data/sum_data.parquet"
+    input_path = f"s3a://{bucket_name}/input_data/*.csv"
+    output_path = f"s3a://{bucket_name}/output_data/sum_data.parquet"
     sum_csv_files(input_path, output_path)
 
 if __name__ == "__main__":
