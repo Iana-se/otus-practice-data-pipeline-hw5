@@ -1,7 +1,7 @@
 """
 Script: data_preprocess.py
 DAG: data_preprocess
-Description: DAG for Data Preprocessing with Yandex Data Proc
+Description: Simple DAG for Data Preprocessing with Yandex Data Proc
 """
 
 import uuid
