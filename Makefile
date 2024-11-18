@@ -49,4 +49,4 @@ instance-list:
 .PHONY: git-push-secrets
 git-push-secrets:
 	@echo "Pushing secrets to github..."
-	python3 scripts/push_secrets_to_github_repo.py
+	python3 utils/push_secrets_to_github_repo.py
