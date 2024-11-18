@@ -1,0 +1,70 @@
+# CI/CD GitHub Actions
+# sync-dags: job будет синхронизировать DAGs из репозитория с Airflow через SSH
+# upload-src: job будет загружать исходный код в S3
+
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dags/**'
+      - 'src/**'
+
+env:
+  DEPLOY_HOST: ${{ secrets.AIRFLOW_HOST }}
+  DEPLOY_DAGS_FOLDER: ${{ secrets.AIRFLOW_DAGS_FOLDER }}
+  SSH_USER: ${{ secrets.AIRFLOW_VM_USER }}
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  YC_S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+  YC_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY }}
+  YC_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_KEY }}
+  YC_S3_ENDPOINT: ${{ secrets.S3_ENDPOINT_URL }}
+
+jobs:
+  sync-dags:
+    name: Sync DAGs to Airflow
+    runs-on: ubuntu-latest
+    if: >
+      contains(github.event.head_commit.modified, 'dags/') || 
+      contains(github.event.head_commit.added, 'dags/') || 
+      contains(github.event.head_commit.removed, 'dags/')
+    steps:
+      # загрузка репозитория в runner
+      - uses: actions/checkout@v3
+
+      # синхронизация файлов с Airflow
+      - name: Sync DAGs to server
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete
+          path: dags/
+          remote_path: ${{ env.DEPLOY_DAGS_FOLDER }}
+          remote_host: ${{ env.DEPLOY_HOST }}
+          remote_user: ${{ env.SSH_USER }}
+          remote_key: ${{ env.SSH_PRIVATE_KEY }}
+
+  upload-src:
+    name: Upload Source code to S3
+    runs-on: ubuntu-latest
+    if: >
+      contains(github.event.head_commit.modified, 'src/') || 
+      contains(github.event.head_commit.added, 'src/') || 
+      contains(github.event.head_commit.removed, 'src/')
+    steps:
+      # загрузка репозитория в runner
+      - uses: actions/checkout@v2
+      
+      # загрузка файлов в S3
+      - name: Upload to S3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --delete
+        env:
+          AWS_S3_BUCKET: ${{ env.YC_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ env.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.YC_SECRET_ACCESS_KEY }}
+          AWS_S3_ENDPOINT: ${{ env.YC_S3_ENDPOINT }}
+          SOURCE_DIR: 'src'
+          DEST_DIR: 'src'
