@@ -9,8 +9,8 @@ on:
     branches:
       - main
     paths:
-      - 'dags/*'
-      - 'src/*'
+      - 'dags/**'
+      - 'src/**'
 
 env:
   DEPLOY_HOST: ${{ secrets.AIRFLOW_HOST }}
@@ -26,10 +26,6 @@ jobs:
   sync-dags:
     name: Sync DAGs to Airflow
     runs-on: ubuntu-latest
-    if: >
-      contains(github.event.head_commit.modified, 'dags/') || 
-      contains(github.event.head_commit.added, 'dags/') || 
-      contains(github.event.head_commit.removed, 'dags/')
     steps:
       # загрузка репозитория в runner
       - uses: actions/checkout@v3
@@ -48,10 +44,6 @@ jobs:
   upload-src:
     name: Upload Source code to S3
     runs-on: ubuntu-latest
-    if: >
-      contains(github.event.head_commit.modified, 'src/') || 
-      contains(github.event.head_commit.added, 'src/') || 
-      contains(github.event.head_commit.removed, 'src/')
     steps:
       # загрузка репозитория в runner
       - uses: actions/checkout@v2
