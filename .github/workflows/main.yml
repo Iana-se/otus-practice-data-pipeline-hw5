@@ -9,8 +9,8 @@ on:
     branches:
       - main
     paths:
-      - 'dags/**'
-      - 'src/**'
+      - 'dags/*'
+      - 'src/*'
 
 env:
   DEPLOY_HOST: ${{ secrets.AIRFLOW_HOST }}
