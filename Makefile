@@ -20,7 +20,7 @@ upload-dags-to-airflow:
 	scp -i $(PRIVATE_KEY_PATH) \
 		-o StrictHostKeyChecking=no \
 		-o UserKnownHostsFile=/dev/null \
-		-r dags/ $(AIRFLOW_VM_USER)@$(AIRFLOW_HOST):/home/airflow/dags/
+		-r dags/*.py $(AIRFLOW_VM_USER)@$(AIRFLOW_HOST):/home/airflow/dags/
 	@echo "Dags uploaded successfully"
 
 .PHONY: upload-src-to-bucket
