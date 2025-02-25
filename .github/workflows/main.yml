@@ -24,22 +24,24 @@ env:
 
 jobs:
   sync-dags:
-    name: Sync DAGs to Airflow
+    name: Sync dags to S3
     runs-on: ubuntu-latest
     steps:
       # загрузка репозитория в runner
-      - uses: actions/checkout@v3
-
-      # синхронизация файлов с Airflow
-      - name: Sync DAGs to server
-        uses: burnett01/rsync-deployments@7.0.1
+      - uses: actions/checkout@v2
+      
+      # загрузка файлов в S3
+      - name: Upload to S3
+        uses: jakejarvis/s3-sync-action@master
         with:
-          switches: -avz --no-times --no-perms --include="*.py" --exclude="*"
-          path: dags/
-          remote_path: ${{ env.DEPLOY_DAGS_FOLDER }}
-          remote_host: ${{ env.DEPLOY_HOST }}
-          remote_user: ${{ env.SSH_USER }}
-          remote_key: ${{ env.SSH_PRIVATE_KEY }}
+          args: --delete
+        env:
+          AWS_S3_BUCKET: ${{ env.YC_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ env.YC_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.YC_SECRET_ACCESS_KEY }}
+          AWS_S3_ENDPOINT: ${{ env.YC_S3_ENDPOINT }}
+          SOURCE_DIR: 'dags'
+          DEST_DIR: 'dags'
 
   upload-src:
     name: Upload Source code to S3

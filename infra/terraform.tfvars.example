@@ -11,6 +11,7 @@ yc_subnet_name          = "airflow-subnet"
 yc_service_account_name = "airflow-vm-sa"
 yc_bucket_name          = "airflow-bucket"
 yc_storage_endpoint_url = "https://storage.yandexcloud.net"
+admin_password          = "Большая буква маленькие буквы цифры и знак -"
 ubuntu_image_id         = "" # Airflow image
 public_key_path         = ""
 private_key_path        = ""

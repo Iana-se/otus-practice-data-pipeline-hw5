@@ -1,10 +1,10 @@
 # main.tf
-locals {
-  home = "/home/${var.yc_instance_user}"
-  variables_path  = "${local.home}/variables.json"
-  authorized_key_path = "${local.home}/authorized_key.json"
-  import_airflow_variables_path = "${local.home}/import_airflow_variables.sh"
-}
+# locals {
+#   home                          = "/home/${var.yc_instance_user}"
+#   variables_path                = "${local.home}/variables.json"
+#   authorized_key_path           = "${local.home}/authorized_key.json"
+#   import_airflow_variables_path = "${local.home}/import_airflow_variables.sh"
+# }
 
 module "iam" {
   source          = "./modules/iam"
@@ -27,15 +27,13 @@ module "storage" {
   secret_key      = module.iam.secret_key
 }
 
-module "compute" {
-  source             = "./modules/compute"
-  instance_user      = var.yc_instance_user
+module "airflow-cluster" {
+  source             = "./modules/airflow-cluster"
   instance_name      = var.yc_instance_name
-  service_account_id = module.iam.service_account_id
   subnet_id          = module.network.subnet_id
-  ubuntu_image_id    = var.ubuntu_image_id
-  public_key_path    = var.public_key_path
-  private_key_path   = var.private_key_path
+  service_account_id = module.iam.service_account_id
+  admin_password     = var.admin_password
+  bucket_name        = module.storage.bucket
   provider_config    = var.yc_config
 }
 
@@ -52,73 +50,33 @@ resource "local_file" "variables_file" {
     S3_SECRET_KEY   = module.iam.secret_key
     S3_BUCKET_NAME  = module.storage.bucket
     # Data Proc
-    DP_SA_AUTH_KEY_PUBLIC_KEY = module.iam.public_key
-    DP_SA_PATH                = local.authorized_key_path
-    DP_SA_ID                  = module.iam.service_account_id
     DP_SECURITY_GROUP_ID      = module.network.security_group_id
+    DP_SA_ID                  = module.iam.service_account_id
+    DP_SA_AUTH_KEY_PUBLIC_KEY = module.iam.public_key
+    DP_SA_JSON = jsonencode({
+      id                 = module.iam.auth_key_id
+      service_account_id = module.iam.service_account_id
+      created_at         = module.iam.auth_key_created_at
+      public_key         = module.iam.public_key
+      private_key        = module.iam.private_key
+    })
   })
   filename        = "./variables.json"
   file_permission = "0600"
 }
 
-
-# Добавляем ресурс для копирования и импорта переменных
-resource "null_resource" "import_variables" {
-  connection {
-    type        = "ssh"
-    user        = var.yc_instance_user
-    private_key = file(var.private_key_path)
-    host        = module.compute.external_ip_address
-  }
-
-  # Копируем файлы на VM
-  provisioner "file" {
-    source      = "${path.root}/modules/iam/authorized_key.json"
-    destination = local.authorized_key_path
-  }
-  
-  provisioner "file" {
-    source      = "./variables.json"
-    destination = local.variables_path
-  }
-
-  provisioner "file" {
-    content = templatefile("${path.root}/scripts/import_airflow_variables.sh", {
-      airflow_db_conn = var.airflow_db_conn_default
-      }
-    )
-    destination = local.import_airflow_variables_path
-  }
-
-  # Импортируем переменные через Airflow CLI
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x ${local.import_airflow_variables_path}",
-      "bash ${local.import_airflow_variables_path}"
-    ]
-  }
-
-  depends_on = [
-    local_file.variables_file
-  ]
-}
-
 # Запись переменных в .env файл
-# AIRFLOW_ADMIN_PASSWORD это ID виртуальной машины
-# AIRFLOW_HOST это IP виртуальной машины
 resource "null_resource" "update_env" {
   provisioner "local-exec" {
     command = <<EOT
       # Определяем переменные
-      AIRFLOW_HOST=${module.compute.external_ip_address}
-      AIRFLOW_ADMIN_PASSWORD=${module.compute.instance_id}
+      AIRFLOW_ADMIN_PASSWORD=${var.admin_password}
       STORAGE_ENDPOINT_URL=${var.yc_storage_endpoint_url}
       BUCKET_NAME=${module.storage.bucket}
       ACCESS_KEY=${module.iam.access_key}
       SECRET_KEY=${module.iam.secret_key}
 
       # Замена пустых переменных в .env
-      sed -i "s|^AIRFLOW_HOST=.*|AIRFLOW_HOST=$AIRFLOW_HOST|" ../.env
       sed -i "s|^AIRFLOW_ADMIN_PASSWORD=.*|AIRFLOW_ADMIN_PASSWORD=$AIRFLOW_ADMIN_PASSWORD|" ../.env
       sed -i "s|^S3_ENDPOINT_URL=.*|S3_ENDPOINT_URL=$STORAGE_ENDPOINT_URL|" ../.env
       sed -i "s|^S3_BUCKET_NAME=.*|S3_BUCKET_NAME=$BUCKET_NAME|" ../.env

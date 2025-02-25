@@ -27,3 +27,16 @@ output "public_key" {
   value       = yandex_iam_service_account_key.sa-auth-key.public_key
   description = "ID of the authorized key"
 }
+
+output "auth_key_id" {
+  value = yandex_iam_service_account_key.sa-auth-key.id
+}
+
+output "auth_key_created_at" {
+  value = yandex_iam_service_account_key.sa-auth-key.created_at
+}
+
+output "private_key" {
+  value = regex("-----BEGIN PRIVATE KEY-----[\\s\\S]*$", yandex_iam_service_account_key.sa-auth-key.private_key)
+  sensitive = true
+}

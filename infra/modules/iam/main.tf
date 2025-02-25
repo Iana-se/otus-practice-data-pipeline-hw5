@@ -1,10 +1,12 @@
 resource "yandex_iam_service_account" "sa" {
   name        = var.name
-  description = "Service account for VM management"
+  description = "Service account for Airflow management"
 }
 
 resource "yandex_resourcemanager_folder_iam_member" "sa_roles" {
   for_each = toset([
+    "managed-airflow.integrationProvider",
+    "managed-airflow.admin",
     "storage.admin",
     "dataproc.editor",
     "compute.admin",
@@ -54,5 +56,3 @@ resource "local_file" "sa-auth-key-file" {
   filename        = "${path.module}/authorized_key.json"
   file_permission = "0600"
 }
-
-

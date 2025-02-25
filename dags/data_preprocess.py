@@ -27,13 +27,13 @@ S3_ENDPOINT_URL = Variable.get("S3_ENDPOINT_URL")
 S3_ACCESS_KEY = Variable.get("S3_ACCESS_KEY")
 S3_SECRET_KEY = Variable.get("S3_SECRET_KEY")
 S3_BUCKET_NAME = Variable.get("S3_BUCKET_NAME")
-S3_INPUT_DATA_BUCKET = S3_BUCKET_NAME + "/airflow/"  # YC S3 bucket for input data
-S3_SOURCE_BUCKET = S3_BUCKET_NAME[:]  # YC S3 bucket for pyspark source files
-S3_DP_LOGS_BUCKET = S3_BUCKET_NAME + "/airflow_logs/"  # YC S3 bucket for Data Proc logs
+S3_INPUT_DATA_BUCKET = S3_BUCKET_NAME + "/airflow/"     # YC S3 bucket for input data
+S3_SRC_BUCKET = S3_BUCKET_NAME[:]                       # YC S3 bucket for pyspark source files
+S3_DP_LOGS_BUCKET = S3_BUCKET_NAME + "/airflow_logs/"   # YC S3 bucket for Data Proc logs
 
 # Переменные необходимые для создания Dataproc кластера
 DP_SA_AUTH_KEY_PUBLIC_KEY = Variable.get("DP_SA_AUTH_KEY_PUBLIC_KEY")
-DP_SA_PATH = Variable.get("DP_SA_PATH")
+DP_SA_JSON = Variable.get("DP_SA_JSON")
 DP_SA_ID = Variable.get("DP_SA_ID")
 DP_SECURITY_GROUP_ID = Variable.get("DP_SECURITY_GROUP_ID")
 
@@ -54,7 +54,7 @@ YC_SA_CONNECTION = Connection(
     conn_type="yandexcloud",
     extra={
         "extra__yandexcloud__public_ssh_key": DP_SA_AUTH_KEY_PUBLIC_KEY,
-        "extra__yandexcloud__service_account_json_path": DP_SA_PATH,
+        "extra__yandexcloud__service_account_json": DP_SA_JSON,
     },
 )
 
@@ -111,7 +111,7 @@ with DAG(
         service_account_id=DP_SA_ID,
         ssh_public_keys=YC_SSH_PUBLIC_KEY,
         zone=YC_ZONE,
-        cluster_image_version="2.0.43",
+        cluster_image_version="2.0",
         # masternode
         masternode_resource_preset="s3-c2-m8",
         masternode_disk_type="network-ssd",
@@ -119,7 +119,7 @@ with DAG(
         # datanodes
         datanode_resource_preset="s3-c4-m16",
         datanode_disk_type="network-ssd",
-        datanode_disk_size=80,
+        datanode_disk_size=50,
         datanode_count=2,
         # software
         services=["YARN", "SPARK", "HDFS", "MAPREDUCE"],
@@ -130,7 +130,7 @@ with DAG(
     # 2 этап: запуск задания PySpark
     poke_spark_processing = DataprocCreatePysparkJobOperator(
         task_id="dp-cluster-pyspark-task",
-        main_python_file_uri=f"s3a://{S3_SOURCE_BUCKET}/src/pyspark_script.py",
+        main_python_file_uri=f"s3a://{S3_SRC_BUCKET}/src/pyspark_script.py",
         connection_id=YC_SA_CONNECTION.conn_id,
         args=["--bucket", S3_BUCKET_NAME],
         dag=ingest_dag,

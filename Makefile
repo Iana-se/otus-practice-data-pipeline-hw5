@@ -23,6 +23,12 @@ upload-dags-to-airflow:
 		-r dags/*.py $(AIRFLOW_VM_USER)@$(AIRFLOW_HOST):/home/airflow/dags/
 	@echo "Dags uploaded successfully"
 
+.PHONY: upload-dags-to-bucket
+upload-dags-to-bucket:
+	@echo "Uploading dags to $(S3_BUCKET_NAME)..."
+	s3cmd put --recursive dags/ s3://$(S3_BUCKET_NAME)/dags/
+	@echo "DAGs uploaded successfully"
+
 .PHONY: upload-src-to-bucket
 upload-src-to-bucket:
 	@echo "Uploading src to $(S3_BUCKET_NAME)..."
@@ -50,3 +56,6 @@ instance-list:
 git-push-secrets:
 	@echo "Pushing secrets to github..."
 	python3 utils/push_secrets_to_github_repo.py
+
+sync-repo:
+	rsync -avz --exclude=.venv --exclude=infra/.terraform --exclude=*.tfstate --exclude=*.backup --exclude=*.json . yc-proxy:/home/ubuntu/otus/otus-practice-data-pipeline

@@ -39,6 +39,11 @@ variable "private_key_path" {
   type = string
 }
 
+variable "admin_password" {
+  type = string
+  description = "Admin password for the Airflow web interface"
+}
+
 variable "yc_config" {
   type = object({
     zone      = string
