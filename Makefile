@@ -58,4 +58,9 @@ git-push-secrets:
 	python3 utils/push_secrets_to_github_repo.py
 
 sync-repo:
-	rsync -avz --exclude=.venv --exclude=infra/.terraform --exclude=*.tfstate --exclude=*.backup --exclude=*.json . yc-proxy:/home/ubuntu/otus/otus-practice-data-pipeline
+	rsync -avz \
+		--exclude=.venv \
+		--exclude=infra/.terraform \
+		--exclude=*.tfstate \
+		--exclude=*.backup \
+		--exclude=*.json . yc-proxy:/home/ubuntu/otus/otus-practice-data-pipeline
