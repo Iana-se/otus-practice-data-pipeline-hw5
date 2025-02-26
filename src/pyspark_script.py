@@ -44,6 +44,8 @@ def sum_csv_files(source_path: str, output_path: str) -> None:
     )
 
     result_df.write.mode("overwrite").parquet(output_path)
+    print("Successfully saved the result to the output bucket")
+
 
 def main():
     """Main function to execute the PySpark job"""
