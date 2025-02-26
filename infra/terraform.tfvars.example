@@ -2,7 +2,7 @@ yc_config = {
   token     = ""
   cloud_id  = ""
   folder_id = ""
-  zone      = "ru-central1-a"
+  zone      = "ru-central1-c"
 }
 yc_instance_user        = "ubuntu"
 yc_instance_name        = "airflow-cluster"
