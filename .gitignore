@@ -19,3 +19,4 @@ variables.json
 auth.json
 authorized_key.json
 driveroutput.*
+config

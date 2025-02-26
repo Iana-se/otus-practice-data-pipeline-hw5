@@ -1,10 +1,4 @@
 # main.tf
-# locals {
-#   home                          = "/home/${var.yc_instance_user}"
-#   variables_path                = "${local.home}/variables.json"
-#   authorized_key_path           = "${local.home}/authorized_key.json"
-#   import_airflow_variables_path = "${local.home}/import_airflow_variables.sh"
-# }
 
 module "iam" {
   source          = "./modules/iam"

@@ -7,13 +7,13 @@ resource "yandex_resourcemanager_folder_iam_member" "sa_roles" {
   for_each = toset([
     "managed-airflow.integrationProvider",
     "managed-airflow.admin",
-    "storage.admin",
     "dataproc.editor",
-    "compute.admin",
     "dataproc.agent",
     "mdb.dataproc.agent",
     "vpc.user",
     "iam.serviceAccounts.user",
+    "compute.admin",
+    "storage.admin",
     "storage.uploader",
     "storage.viewer",
     "storage.editor"
