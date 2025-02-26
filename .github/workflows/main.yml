@@ -1,22 +1,18 @@
 # CI/CD GitHub Actions
-# sync-dags: job будет синхронизировать DAGs из репозитория с Airflow через SSH
-# upload-src: job будет загружать исходный код в S3
+# sync-dags: job будет синхронизировать DAGs из репозитория с бакетом для Airflow
+# upload-src: job будет загружать исходный код в бакет для Airflow
 
 name: CI/CD
 
-# on:
-#   push:
-#     branches:
-#       - main
-#     paths:
-#       - 'dags/**'
-#       - 'src/**'
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dags/**'
+      - 'src/**'
 
 env:
-  DEPLOY_HOST: ${{ secrets.AIRFLOW_HOST }}
-  DEPLOY_DAGS_FOLDER: ${{ secrets.AIRFLOW_DAGS_FOLDER }}
-  SSH_USER: ${{ secrets.AIRFLOW_VM_USER }}
-  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
   YC_S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
   YC_S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY }}
   YC_S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_KEY }}
