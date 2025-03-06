@@ -67,3 +67,6 @@ sync-repo:
 
 sync-env:
 	rsync -avz yc-proxy:/home/ubuntu/otus/otus-practice-data-pipeline/.env .env
+
+airflow-cluster-mon:
+	yc logging read --group-name=default --follow
