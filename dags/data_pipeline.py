@@ -100,8 +100,8 @@ def run_setup_connections(**kwargs): # pylint: disable=unused-argument
 # Настройки DAG
 with DAG(
     dag_id="data_pipeline",
-    start_date=datetime(year=2025, month=3, day=7),
-    schedule_interval=timedelta(minutes=30),
+    start_date=datetime(year=2025, month=6, day=10),
+    schedule_interval=timedelta(minutes=60),
     catchup=False
 ) as dag:
     # Задача для создания подключений
@@ -115,7 +115,7 @@ with DAG(
         task_id="dp-cluster-create-task",
         folder_id=YC_FOLDER_ID,
         cluster_name=f"tmp-dp-{uuid.uuid4()}",
-        cluster_description="YC Temporary cluster for Spark processing under Airflow orchestration",
+        cluster_description="Temp Spark Cluster",
         subnet_id=YC_SUBNET_ID,
         s3_bucket=S3_DP_LOGS_BUCKET,
         service_account_id=DP_SA_ID,
