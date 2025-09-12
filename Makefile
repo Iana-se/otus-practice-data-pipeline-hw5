@@ -14,6 +14,15 @@ setup-airflow-variables:
 		'bash /home/ubuntu/setup_airflow_variables.sh'
 	@echo "Script execution completed"
 
+.PHONY: push-airflow-variables
+push-airflow-variables:
+	@echo "Pushing variables.json to Airflow API..."
+	curl -X POST -H "Content-Type: application/json" \
+		-u $(AIRFLOW_ADMIN_USER):$(AIRFLOW_ADMIN_PASSWORD) \
+		--data-binary @variables.json \
+		https://$(AIRFLOW_URL)/api/v1/variables
+	@echo "Variables pushed successfully"
+
 .PHONY: upload-dags-to-airflow
 upload-dags-to-airflow:
 	@echo "Uploading dags to $(AIRFLOW_HOST)..."
@@ -42,6 +51,18 @@ upload-data-to-bucket:
 	@echo "Data uploaded successfully"
 
 upload-all: upload-data-to-bucket upload-src-to-bucket upload-dags-to-bucket
+
+.PHONY: clean-s3-bucket
+clean-s3-bucket:
+	@echo "Cleaning S3 bucket $(S3_BUCKET_NAME)..."
+	s3cmd del --force --recursive s3://$(S3_BUCKET_NAME)/
+	@echo "S3 bucket cleaned"
+
+.PHONY: remove-s3-bucket
+remove-s3-bucket:
+	@echo "Removing S3 bucket $(S3_BUCKET_NAME)..."
+	s3cmd rb s3://$(S3_BUCKET_NAME)
+	@echo "S3 bucket removed"
 
 .PHONY: download-output-data-from-bucket
 download-output-data-from-bucket:

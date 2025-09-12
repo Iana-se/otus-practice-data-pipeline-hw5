@@ -64,6 +64,7 @@ resource "null_resource" "update_env" {
   provisioner "local-exec" {
     command = <<EOT
       # Определяем переменные
+      AIRFLOW_ID=${module.airflow-cluster.airflow_id}
       AIRFLOW_ADMIN_PASSWORD=${var.admin_password}
       STORAGE_ENDPOINT_URL=${var.yc_storage_endpoint_url}
       BUCKET_NAME=${module.storage.bucket}
@@ -71,6 +72,7 @@ resource "null_resource" "update_env" {
       SECRET_KEY=${module.iam.secret_key}
 
       # Замена пустых переменных в .env
+      sed -i "s|^AIRFLOW_URL=.*|AIRFLOW_URL=http://c-$AIRFLOW_ID.airflow.yandexcloud.net|" ../.env
       sed -i "s|^AIRFLOW_ADMIN_PASSWORD=.*|AIRFLOW_ADMIN_PASSWORD=$AIRFLOW_ADMIN_PASSWORD|" ../.env
       sed -i "s|^S3_ENDPOINT_URL=.*|S3_ENDPOINT_URL=$STORAGE_ENDPOINT_URL|" ../.env
       sed -i "s|^S3_BUCKET_NAME=.*|S3_BUCKET_NAME=$BUCKET_NAME|" ../.env
