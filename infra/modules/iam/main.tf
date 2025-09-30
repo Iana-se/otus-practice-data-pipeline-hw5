@@ -5,6 +5,7 @@ resource "yandex_iam_service_account" "sa" {
 
 resource "yandex_resourcemanager_folder_iam_member" "sa_roles" {
   for_each = toset([
+    "vpc.admin",
     "managed-airflow.integrationProvider",
     "managed-airflow.admin",
     "dataproc.editor",
@@ -16,7 +17,8 @@ resource "yandex_resourcemanager_folder_iam_member" "sa_roles" {
     "storage.admin",
     "storage.uploader",
     "storage.viewer",
-    "storage.editor"
+    "storage.editor",
+    "monitoring.viewer"
   ])
 
   folder_id = var.provider_config.folder_id

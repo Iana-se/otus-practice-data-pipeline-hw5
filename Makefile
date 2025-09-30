@@ -4,6 +4,12 @@ include .env
 
 .EXPORT_ALL_VARIABLES:
 
+.PHONY: generate-env
+generate-env:
+	@echo "Generating .env from infra/variables.json..."
+	@python3 create_env.py
+	@echo ".env файл успешно создан"
+
 .PHONY: setup-airflow-variables
 setup-airflow-variables:
 	@echo "Running setup_airflow_variables.sh on $(AIRFLOW_HOST)..."
@@ -44,11 +50,49 @@ upload-src-to-bucket:
 	s3cmd put --recursive src/ s3://$(S3_BUCKET_NAME)/src/
 	@echo "Src uploaded successfully"
 
+# .PHONY: upload-data-to-bucket
+# upload-data-to-bucket:
+# 	@echo "Uploading data to $(S3_BUCKET_NAME)..."
+# 	s3cmd put --recursive data/input_data/*.csv s3://$(S3_BUCKET_NAME)/input_data/
+# 	@echo "Data uploaded successfully"
+
+# .PHONY: upload-data-to-bucket
+# upload-data-to-bucket:
+# 	@echo "Syncing all files from the source bucket to $(S3_BUCKET_NAME)..."
+# 	@s3cmd sync --acl-public s3://otus-mlops-source-data/ s3://$(S3_BUCKET_NAME)/
+# 	@echo "Syncing additional local files to $(S3_BUCKET_NAME)..."
+# 	@s3cmd sync --acl-public ./local_files/ s3://$(S3_BUCKET_NAME)/
+# 	@echo "Data successfully synced to $(S3_BUCKET_NAME)"
+
+
 .PHONY: upload-data-to-bucket
 upload-data-to-bucket:
-	@echo "Uploading data to $(S3_BUCKET_NAME)..."
-	s3cmd put --recursive data/input_data/*.csv s3://$(S3_BUCKET_NAME)/input_data/
-	@echo "Data uploaded successfully"
+	@echo "Syncing all files from the source bucket to $(S3_BUCKET_NAME)/input_data/..."
+	@s3cmd sync --acl-public s3://otus-mlops-source-data/ s3://$(S3_BUCKET_NAME)/input_data/
+	@echo "Syncing additional local files to $(S3_BUCKET_NAME)/input_data/..."
+	@s3cmd sync --acl-public ./local_files/ s3://$(S3_BUCKET_NAME)/input_data/
+	@echo "Data successfully synced to $(S3_BUCKET_NAME)/input_data/"
+
+.PHONY: upload-data_10_files
+upload-data_10_files:
+	@echo "Syncing first 10 files from the source bucket to $(S3_BUCKET_NAME)/input_data/..."
+	@for file in $$(s3cmd ls s3://otus-mlops-source-data/ | awk '{print $$4}' | head -n 10); do \
+		s3cmd cp --acl-public $$file s3://$(S3_BUCKET_NAME)/input_data/; \
+	done
+	@echo "Syncing first 10 local files to $(S3_BUCKET_NAME)/input_data/..."
+	@for file in $$(ls ./local_files | head -n 10); do \
+		s3cmd put --acl-public ./local_files/$$file s3://$(S3_BUCKET_NAME)/input_data/; \
+	done
+	@echo "Data successfully synced (10 files from S3 + 10 local files)."
+
+
+
+.PHONY: move-txt-to-input-data
+move-txt-to-input-data:
+	@echo "Moving only .txt files from bucket root to input_data/..."
+	@s3cmd ls s3://$(S3_BUCKET_NAME)/ | awk '{print $$4}' | grep '\.txt$$' | xargs -I {} s3cmd mv {} s3://$(S3_BUCKET_NAME)/input_data/
+	@echo ".txt files successfully moved to input_data/"
+
 
 upload-all: upload-data-to-bucket upload-src-to-bucket upload-dags-to-bucket
 

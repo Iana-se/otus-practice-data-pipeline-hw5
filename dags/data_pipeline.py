@@ -99,9 +99,10 @@ def run_setup_connections(**kwargs): # pylint: disable=unused-argument
 
 # Настройки DAG
 with DAG(
-    dag_id="data_pipeline",
-    start_date=datetime(year=2025, month=6, day=10),
-    schedule_interval=timedelta(minutes=60),
+    dag_id="data_clean_pipeline1",
+    start_date=datetime(year=2025, month=9, day=28),
+    #schedule_interval=timedelta(minutes=90),
+    schedule_interval="@daily", 
     catchup=False
 ) as dag:
     # Задача для создания подключений
@@ -109,6 +110,39 @@ with DAG(
         task_id="setup_connections",
         python_callable=run_setup_connections,
     )
+
+    # 1 этап: создание Dataproc клаcтера
+    # create_spark_cluster = DataprocCreateClusterOperator(
+    #     task_id="dp-cluster-create-task",
+    #     folder_id=YC_FOLDER_ID,
+    #     cluster_name=f"tmp-dp-{uuid.uuid4()}",
+    #     cluster_description="YC Temp Spark Cluster",
+    #     subnet_id=YC_SUBNET_ID,
+    #     s3_bucket=S3_DP_LOGS_BUCKET,
+    #     service_account_id=DP_SA_ID,
+    #     ssh_public_keys=YC_SSH_PUBLIC_KEY,
+    #     zone=YC_ZONE,
+    #     cluster_image_version="2.0",
+
+    #     # masternode
+    #     masternode_resource_preset="s3-c2-m8",
+    #     masternode_disk_type="network-ssd",
+    #     masternode_disk_size=20,
+
+    #     # datanodes
+    #     datanode_resource_preset="s3-c4-m16",
+    #     datanode_disk_type="network-ssd",
+    #     datanode_disk_size=50,
+    #     datanode_count=2,
+
+    #     # computenodes
+    #     computenode_count=0,
+
+    #     # software
+    #     services=["YARN", "SPARK", "HDFS", "MAPREDUCE"],
+    #     connection_id=YC_SA_CONNECTION.conn_id,
+    #     dag=dag,
+    # )
 
     # 1 этап: создание Dataproc клаcтера
     create_spark_cluster = DataprocCreateClusterOperator(
@@ -128,20 +162,22 @@ with DAG(
         masternode_disk_type="network-ssd",
         masternode_disk_size=20,
 
-        # datanodes
-        datanode_resource_preset="s3-c4-m16",
+        # datanodes (увеличиваем ресурсы и количество)
+        datanode_resource_preset="s3-c8-m32",  # БЫЛО s3-c4-m16
         datanode_disk_type="network-ssd",
         datanode_disk_size=50,
-        datanode_count=2,
+        datanode_count=3,  # БЫЛО 2 или 3
 
-        # computenodes
-        computenode_count=0,
+        # computenodes (добавляем для доп. параллельности)
+        computenode_count=1,  # БЫЛО 0 или 1
 
         # software
         services=["YARN", "SPARK", "HDFS", "MAPREDUCE"],
         connection_id=YC_SA_CONNECTION.conn_id,
         dag=dag,
     )
+
+
     # 2 этап: запуск задания PySpark
     poke_spark_processing = DataprocCreatePysparkJobOperator(
         task_id="dp-cluster-pyspark-task",

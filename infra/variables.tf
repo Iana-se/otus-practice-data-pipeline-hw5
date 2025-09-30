@@ -56,4 +56,5 @@ variable "yc_config" {
 
 variable "airflow_db_conn_default" {
   type = string
+  default = ""
 }
